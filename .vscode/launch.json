@@ -1,0 +1,48 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "probe-rs-debug",
+            "request": "launch",
+            "name": "Probe-rs Debug",
+            "cwd": "${workspaceFolder}",
+            "chip": "STM32F407ZGTx",
+            "flashingConfig": {
+                "flashingEnabled": true,
+                "haltAfterReset": false,
+                "fullChipErase": false,
+                "formatOptions": {
+                    "binaryFormat": "elf"
+                }
+            },
+            "coreConfigs": [
+                {
+                    "coreIndex": 0,
+                    "rttEnabled": false,
+                    "programBinary": "build/${workspaceFolderBasename}",
+                }
+            ],
+            "connectUnderReset": false,
+            "consoleLogLevel": "Console",
+        },
+        {
+            "preLaunchTask": "ninja: build",
+            "type": "cortex-debug",
+            "request": "launch",
+            "name": "Debug with probe-rs",
+            "cwd": "${workspaceRoot}",
+            "servertype": "external",
+            "gdbTarget": "localhost:1337",
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "raw",
+            "breakAfterReset": true,
+            "executable": "build/${workspaceFolderBasename}",
+            "overrideLaunchCommands": [
+                "interpreter-exec console \"monitor reset halt\"",
+                // "target-download", // 调试前请手动下载
+                // "interpreter-exec console \"monitor reset halt\"",
+                "-enable-pretty-printing"
+            ],
+        },
+    ]
+}
