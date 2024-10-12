@@ -14,6 +14,10 @@ extern UART_HandleTypeDef UART_USED;
 static uint8_t buffer[22], temp[25];
 static uint16_t len = 0;
 
+static const uint8_t clear_cmd[5] = {
+    0xFF, 0xAA, 0x76, 0x00, 0x00,
+};
+
 _Bool hwt101_read_ok(unsigned timeout) {
   uint8_t rx_buffer[24] = {0}, offsize = 0;
 
@@ -31,10 +35,24 @@ void hwt101_init(void) {
   hwt101_uart_init();
 
   hwt101_delay_long();
+  HAL_UART_Transmit(&UART_USED, clear_cmd, sizeof(clear_cmd), 6);
+  hwt101_delay_long();
 
   while (!hwt101_read_ok(10));
 
   /// 接收数据, 并过滤掉无效数据
+  HAL_UARTEx_ReceiveToIdle(&UART_USED, temp, sizeof(temp), &len, HAL_MAX_DELAY);
+  HAL_UART_Receive_DMA(&UART_USED, buffer, sizeof(buffer));
+}
+
+void hwt101_angle_clear(void) {
+  // 停止接收 DMA
+  HAL_UART_DMAStop(&UART_USED);
+
+  // 发送清零指令
+  HAL_UART_Transmit(&UART_USED, clear_cmd, sizeof(clear_cmd), 6);
+
+  // 重新接收数据
   HAL_UARTEx_ReceiveToIdle(&UART_USED, temp, sizeof(temp), &len, HAL_MAX_DELAY);
   HAL_UART_Receive_DMA(&UART_USED, buffer, sizeof(buffer));
 }

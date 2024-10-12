@@ -19,11 +19,11 @@
 #define MOT_MAXOUT 600U
 
 /// 角度环 PID 参数
-#define MA_KP 0U
-#define MA_KI 0U
+#define MA_KP 1U
+#define MA_KI 0.5f
 #define MA_KD 0U
-#define MA_MAXI 60U
-#define MA_MAXOUT 60U
+#define MA_MAXI 0.8f
+#define MA_MAXOUT 90U
 
 void chassis_delay(void);
 
@@ -55,11 +55,10 @@ void chassis_init(void) {
 
 /// 控制相对位置, 单位为 mm
 /// !!! 不要在中断里使用
-void chassis_control_dest(float x, float y) {
-  PID_MotX.target = x, PID_MotY.target = y;
+void chassis_control_dest(uint16_t x, uint16_t y) {
+  PID_MotX.target = (float)x, PID_MotY.target = (float)y;
   PID_MotX.output = PID_MotX.error = PID_MotX.lastError = PID_MotX.integral = 0;
   PID_MotY.output = PID_MotY.error = PID_MotY.lastError = PID_MotY.integral = 0;
-
   motor_addup_clear();
   // chassis_delay();
 
@@ -69,14 +68,11 @@ void chassis_control_dest(float x, float y) {
 
 /// 控制相对角度
 /// !!! 不要在中断里使用
-void chassis_control_angu(float w) {
-  float dest = PID_MotA.target + w;
+void chassis_control_angu(int8_t w) {
+  PID_MotA.target = (float)w;
   PID_MotA.output = PID_MotA.error = PID_MotA.lastError = PID_MotA.integral = 0;
+  hwt101_angle_clear();
 
-  while (dest > 180) dest -= 360;
-  while (dest < -180) dest += 360;
-
-  PID_MotA.target = dest;
   // chassis_delay();
 
   // /// 等待角度环稳定
@@ -108,8 +104,8 @@ void motor_event_callback(void) {
   float DestY =
       (-AddupA + AddupB - AddupC + AddupD) * __PI * WHEEL_RADIUS / 131072.f;
 
-  pid_update(&PID_MotX, DestX);
-  pid_update(&PID_MotY, DestY);
+  pid_update(&PID_MotX, (int)DestX);
+  pid_update(&PID_MotY, (int)DestY);
 
   float SpeedX = PID_MotX.output, SpeedY = PID_MotY.output;
 
@@ -155,13 +151,13 @@ void motor_event_callback(void) {
                    (int16_t)OutputD, accel);
 
   uprintf("D: %d ;;; C: %f ;;; PID: %f, %f, %f ;;; A: %f\r\n",
-          (int)PID_MotA.target, PID_MotA.output, PID_MotA.kp, PID_MotA.ki,
-          PID_MotA.kd, ANGLE);
+          (int)PID_MotA.target, vm, PID_MotA.kp, PID_MotA.ki, PID_MotA.kd,
+          ANGLE);
 }
 
 void hwt101_angle_callback(float angle) {
   // 角度环 PID 更新 d(°)
-  pid_update(&PID_MotA, angle);
+  pid_update(&PID_MotA, (int)angle);
 
   ANGLE = angle;
 }

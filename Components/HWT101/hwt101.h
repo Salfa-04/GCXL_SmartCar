@@ -6,6 +6,9 @@
 /// HWT101 initialization
 void hwt101_init(void);
 
+/// 清除偏航角数据
+void hwt101_angle_clear(void);
+
 /// 中断数据接收回调函数, 请把该函数放到中断服务函数中, 如:
 ///
 /// ```

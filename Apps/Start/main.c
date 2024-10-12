@@ -8,7 +8,7 @@
 
 void chassis_pid_set(float kp, float ki, float kd);
 
-static unsigned char buffer[3];
+static unsigned char buffer[4];
 static _Bool flag = 0;
 
 int main(void) {
@@ -49,8 +49,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart->Instance == USART1) {
     /// bit[6]   Kp  Ki  Kd (/1024)  destX destY  (*256) ACCEL
     // chassis_control_dest(buffer[0] * 10, buffer[1] * 10);
-    chassis_pid_set((float)buffer[0] / 1024, (float)buffer[1] / 1024,
-                    (float)buffer[2] / 1024);
+    chassis_pid_set((float)buffer[0] / 128.f, (float)buffer[1] / 512.f,
+                    (float)buffer[2] / 256.f);
+
+    chassis_control_angu(buffer[3]);
 
     //!: acceleration
     /// 我想的是加一个控制加速度的算法，
