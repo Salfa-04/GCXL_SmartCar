@@ -12,17 +12,17 @@
 #define ACCEL (uint8_t)(ACCEL_PROP * 256.f)
 
 /// 位置环 PID 参数
-#define MOT_KP 1.f
-#define MOT_KI 0.00009765625f
+#define MOT_KP 1U
+#define MOT_KI 512U
 #define MOT_KD 0U
-#define MOT_MAXI 60U
+#define MOT_MAXI 2.55f
 #define MOT_MAXOUT 600U
 
 /// 角度环 PID 参数
 #define MA_KP 1U
-#define MA_KI 0.5f
+#define MA_KI 256U
 #define MA_KD 0U
-#define MA_MAXI 0.8f
+#define MA_MAXI 0.77f
 #define MA_MAXOUT 90U
 
 void chassis_delay(void);
@@ -37,11 +37,6 @@ static int64_t AddupC = 0;
 static int64_t AddupD = 0;
 
 static float ANGLE = 0;
-
-void chassis_pid_set(float kp, float ki, float kd) {
-  PID_MotA.output = PID_MotA.error = PID_MotA.integral = PID_MotA.lastError = 0;
-  PID_MotA.kp = kp, PID_MotA.ki = ki, PID_MotA.kd = kd;
-}
 
 void chassis_init(void) {
   hwt101_init();
@@ -143,16 +138,17 @@ void motor_event_callback(void) {
   uint8_t accel =
       (prop_x > ACCEL_PROP)   ? ((prop_x < 1.f) ? (uint8_t)(prop_x * 256) : 0)
       : (prop_y > ACCEL_PROP) ? ((prop_y < 1.f) ? (uint8_t)(prop_y * 256) : 0)
-      : (prop_x || prop_y)    ? ACCEL
-                              : 0;
+      : (PID_MotX.target || PID_MotY.target) ? ACCEL
+                                             : 0;
 
   /// 并集 PID 输出
   motor_speed_ctrl((int16_t)OutputA, (int16_t)OutputB, (int16_t)OutputC,
                    (int16_t)OutputD, accel);
 
-  uprintf("D: %d ;;; C: %f ;;; PID: %f, %f, %f ;;; A: %f\r\n",
-          (int)PID_MotA.target, vm, PID_MotA.kp, PID_MotA.ki, PID_MotA.kd,
-          ANGLE);
+  uprintf("OA: %d ;;; CA: %f ;;; OD: %d %d ;;; CD: %f, %f ;; ioe: %f %f %f\r\n",
+          (int)PID_MotA.target, ANGLE, (int)PID_MotX.target,
+          (int)PID_MotY.target, DestX, DestY, PID_MotA.integral,
+          PID_MotA.output, PID_MotA.error);
 }
 
 void hwt101_angle_callback(float angle) {

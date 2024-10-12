@@ -6,9 +6,7 @@
 #include "motor.h"
 #include "usart.h"
 
-void chassis_pid_set(float kp, float ki, float kd);
-
-static unsigned char buffer[4];
+static unsigned char buffer[3];
 static _Bool flag = 0;
 
 int main(void) {
@@ -47,28 +45,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart->Instance == UART4) hwt101_event_callback();
   if (huart->Instance == USART1) {
-    /// bit[6]   Kp  Ki  Kd (/1024)  destX destY  (*256) ACCEL
-    // chassis_control_dest(buffer[0] * 10, buffer[1] * 10);
-    chassis_pid_set((float)buffer[0] / 128.f, (float)buffer[1] / 512.f,
-                    (float)buffer[2] / 256.f);
-
-    chassis_control_angu(buffer[3]);
-
-    //!: acceleration
-    /// 我想的是加一个控制加速度的算法，
-    /// 比如，如果 DestX < PID.target * S
-    /// 那么设置小一点的加速度，反之，加速度就设为0
-    /// 通过对系数比例S的调节，来控制加速度的大小
-    /// 从而精确的控制速度和目标位置
-    ///
-    /// 尝试之后发现，加速度的调节效果不是很好
-    /// 实现之后会发现小车速度不稳定
-    /// 并且在位置不同时的效果也不一样，需要重新调整
-
-    //!: Acceleration 新想法
-    /// 目前我想使用的是通过比例来控制加速度的大小
-    /// 比如，当在一个阈值内时，加速度就设为一个较小的数值(需调试)
-    /// 反之，加速度随比例增大，设为较大的数值，从而精确控制小车
+    chassis_control_dest(buffer[1] * 10, buffer[2] * 10);
+    chassis_control_angu(buffer[0]);
 
     HAL_UART_Receive_IT(huart, buffer, sizeof(buffer));
   }
