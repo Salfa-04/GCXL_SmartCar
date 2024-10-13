@@ -8,22 +8,22 @@
 
 #define THRESHOLD 1.f
 
-#define ACCEL_PROP 0.3f  /// 加速度平滑比例
+#define ACCEL_PROP 0.2f  /// 加速度平滑比例
 #define ACCEL (uint8_t)(ACCEL_PROP * 256.f)
 
 /// 位置环 PID 参数
 #define MOT_KP 1U
-#define MOT_KI 512U
+#define MOT_KI 0U
 #define MOT_KD 0U
-#define MOT_MAXI 2.55f
-#define MOT_MAXOUT 600U
+#define MOT_MAXI 1U
+#define MOT_MAXOUT 450U
 
 /// 角度环 PID 参数
-#define MA_KP 1U
-#define MA_KI 256U
+#define MA_KP 6U
+#define MA_KI 0U
 #define MA_KD 0U
-#define MA_MAXI 0.77f
-#define MA_MAXOUT 90U
+#define MA_MAXI 1U
+#define MA_MAXOUT 120U
 
 void chassis_delay(void);
 
@@ -145,10 +145,32 @@ void motor_event_callback(void) {
   motor_speed_ctrl((int16_t)OutputA, (int16_t)OutputB, (int16_t)OutputC,
                    (int16_t)OutputD, accel);
 
-  uprintf("OA: %d ;;; CA: %f ;;; OD: %d %d ;;; CD: %f, %f ;; ioe: %f %f %f\r\n",
-          (int)PID_MotA.target, ANGLE, (int)PID_MotX.target,
-          (int)PID_MotY.target, DestX, DestY, PID_MotA.integral,
-          PID_MotA.output, PID_MotA.error);
+  // uprintf(
+  //     "OA: %d ;;; CA: %f ;;; OD: %d %d ;;; CD: %f, %f ;; ioe: %f %f %f\r\n ",
+  //     (int)PID_MotA.target, ANGLE, (int)PID_MotX.target,
+  //     (int)PID_MotY.target, DestX, DestY, PID_MotA.integral, PID_MotA.output,
+  //     PID_MotA.error);
+
+  // uprintf("oca: %d %f ;;; pid: %f %f %f ;;; ioe: %f %f %f\r\n",
+  //         (int)PID_MotA.target, ANGLE, PID_MotA.kp, PID_MotA.ki, PID_MotA.kd,
+  //         PID_MotA.integral, PID_MotA.output, PID_MotA.error);
+
+  uprintf("od: %d %f, %d %f ; pid: %f %f %f; ioe: %f %f %f, %f %f %f\r\n",
+          (int)PID_MotX.target, DestX, (int)PID_MotY.target, DestY, PID_MotX.kp,
+          PID_MotX.ki, PID_MotX.kd, PID_MotX.integral, PID_MotX.output,
+          PID_MotX.error, PID_MotY.integral, PID_MotY.output, PID_MotY.error);
+}
+
+void angle_pid_set(float p, float i, float d) {
+  PID_MotA.kp = p, PID_MotA.ki = i, PID_MotA.kd = d;
+  PID_MotA.output = PID_MotA.error = PID_MotA.integral = PID_MotA.lastError = 0;
+}
+
+void dest_pid_set(float p, float i, float d) {
+  PID_MotX.kp = p, PID_MotX.ki = i, PID_MotX.kd = d;
+  PID_MotY.kp = p, PID_MotY.ki = i, PID_MotY.kd = d;
+  PID_MotX.output = PID_MotX.error = PID_MotX.integral = PID_MotX.lastError = 0;
+  PID_MotY.output = PID_MotY.error = PID_MotY.integral = PID_MotY.lastError = 0;
 }
 
 void hwt101_angle_callback(float angle) {

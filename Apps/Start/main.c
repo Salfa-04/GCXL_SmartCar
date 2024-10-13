@@ -6,7 +6,7 @@
 #include "motor.h"
 #include "usart.h"
 
-static unsigned char buffer[3];
+static unsigned char buffer[5];
 static _Bool flag = 0;
 
 int main(void) {
@@ -42,11 +42,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   } /* @type tick = ms */
 }
 
+void angle_pid_set(float p, float i, float d);
+void dest_pid_set(float p, float i, float d);
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   if (huart->Instance == UART4) hwt101_event_callback();
   if (huart->Instance == USART1) {
-    chassis_control_dest(buffer[1] * 10, buffer[2] * 10);
-    chassis_control_angu(buffer[0]);
+    // chassis_control_dest(buffer[1] * 10, buffer[2] * 10);
+    // chassis_control_angu(buffer[0]);
+
+    // angle_pid_set(buffer[0], buffer[1], buffer[2]);
+    // chassis_control_angu(buffer[3]);
+
+    dest_pid_set(buffer[0], buffer[1], buffer[2]);
+    chassis_control_dest(buffer[3] * 10, buffer[4] * 10);
 
     HAL_UART_Receive_IT(huart, buffer, sizeof(buffer));
   }
