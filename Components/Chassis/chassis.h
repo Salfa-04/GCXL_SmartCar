@@ -12,7 +12,7 @@ void chassis_init(void);
 
 /// 控制相对位置, 单位为 mm
 /// !!! 不要在中断里使用
-void chassis_control_dest(uint16_t x, uint16_t y);
+void chassis_control_dest(int16_t x, int16_t y);
 
 /// 控制相对角度
 /// !!! 不要在中断里使用

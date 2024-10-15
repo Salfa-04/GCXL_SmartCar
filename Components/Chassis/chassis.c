@@ -4,8 +4,6 @@
 #include "motor.h"
 #include "pid.h"
 
-#define THRESHOLD 1.f
-
 #define ACCEL_PROP 0.2f  /// 加速度平滑比例
 #define ACCEL (uint8_t)(ACCEL_PROP * 256.f)
 
@@ -14,14 +12,14 @@
 #define MOT_KI 0U
 #define MOT_KD 0U
 #define MOT_MAXI 1U
-#define MOT_MAXOUT 450U
+#define MOT_MAXOUT 550U
 
 /// 角度环 PID 参数
-#define MA_KP 6U
+#define MA_KP 10U
 #define MA_KI 0U
 #define MA_KD 0U
 #define MA_MAXI 1U
-#define MA_MAXOUT 120U
+#define MA_MAXOUT 150U
 
 extern float fabsf(float);
 
@@ -49,13 +47,15 @@ void chassis_init(void) {
 
 /// 控制相对位置, 单位为 mm
 /// !!! 不要在中断里使用
-void chassis_control_dest(uint16_t x, uint16_t y) {
+void chassis_control_dest(int16_t x, int16_t y) {
   PID_MotX.target = (float)x, PID_MotY.target = (float)y;
   motor_addup_clear();
 
+  uint32_t tick = HAL_GetTick();
+
   /// 等待位置环稳定
   mutex = 1, mutex_cnt = 4;
-  while (mutex);
+  while (mutex && HAL_GetTick() - tick < 6000U);
 }
 
 /// 控制相对角度
@@ -64,9 +64,11 @@ void chassis_control_angu(int8_t w) {
   PID_MotA.target = (float)w;
   hwt101_angle_clear();
 
+  uint32_t tick = HAL_GetTick();
+
   /// 等待角度环稳定
   mutex = 1, mutex_cnt = 4;
-  while (mutex);
+  while (mutex && HAL_GetTick() - tick < 3000U);
 }
 
 /// 电机事件回调函数, 控制速度更新频率
@@ -125,10 +127,10 @@ void motor_event_callback(void) {
 
   float prop_x = 0, prop_y = 0;
 
-  if (PID_MotX.target) prop_x = DestX / PID_MotX.target;
-  if (PID_MotY.target) prop_y = DestY / PID_MotY.target;
+  if (PID_MotX.target) prop_x = fabsf(DestX / PID_MotX.target);
+  if (PID_MotY.target) prop_y = fabsf(DestY / PID_MotY.target);
 
-  uint8_t accel =
+  uint8_t accel =  /// 动态控制加速度
       (prop_x > ACCEL_PROP)   ? ((prop_x < 1.f) ? (uint8_t)(prop_x * 256) : 0)
       : (prop_y > ACCEL_PROP) ? ((prop_y < 1.f) ? (uint8_t)(prop_y * 256) : 0)
       : (PID_MotX.target || PID_MotY.target) ? ACCEL
@@ -145,25 +147,6 @@ void motor_event_callback(void) {
   } else {
     mutex_cnt--;
   }
-
-  // uprintf("XYA: %f %f %f\r\n", fabsf(PID_MotX.output),
-  // fabsf(PID_MotY.output),
-  //         fabsf(PID_MotA.output));
-
-  // uprintf("OA: %d ;;; CA: %f ;;; OD: %d %d ;;; CD: %f, %f\r\n",
-  //         (int)PID_MotA.target, ANGLE, (int)PID_MotX.target,
-  //         (int)PID_MotY.target, DestX, DestY);
-
-  // uprintf("A: OA: %d ;;; CA: %f ;;; ioe: %f %f %f %f\r\n",
-  // (int)PID_MotA.target,
-  //         ANGLE, PID_MotA.integral, PID_MotA.output, PID_MotA.error, vm);
-
-  // uprintf("X: OD: %d ;;; CD: %f ;;; ioe: %f %f %f\r\n", (int)PID_MotX.target,
-  //         DestY, PID_MotX.integral, PID_MotX.output, PID_MotX.error);
-
-  // uprintf("Y: OD: %d ;;; CD: %f ;;; ioe: %f %f %f\r\n", (int)PID_MotY.target,
-  // DestY,
-  //         PID_MotY.integral, PID_MotY.output, PID_MotY.error);
 }
 
 void hwt101_angle_callback(float angle) {
