@@ -12,7 +12,7 @@ set(CMAKE_PROJECT_DESCRIPTION       "None")
 set(CMAKE_PROJECT_VERSION           "0.07.23")
 set(CMAKE_PROJECT_URL               "api.salfa.cc")
 
-set(PRINTF_FLOAT_SUPPORT            ON)    # BOOL Y/N ON/OFF
+set(PRINTF_FLOAT_SUPPORT            OFF)    # BOOL Y/N ON/OFF
 set(CMAKE_BUILD_TYPE                Debug)  # Release or Debug
 
 set(CMAKE_C_STANDARD                11)     # Min: 11..
@@ -148,7 +148,7 @@ add_custom_target(debug USES_TERMINAL
 ######################################
 
 # Add sub-script
-add_subdirectory(Apps)
+add_subdirectory(Start)
 add_subdirectory(Components)
 add_subdirectory(Drivers)
 
@@ -201,7 +201,7 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
-    drivers corelibraries components applications
+    drivers corelibraries components start
 )
 
 

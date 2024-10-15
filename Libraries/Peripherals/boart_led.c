@@ -1,13 +1,13 @@
-#include "gpio.h"
+#include "board_led.h"
 
-void led_gpio_init(void) {
+void bled_gpio_init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+  BLED_ON();
 
   /*Configure GPIO pins : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
