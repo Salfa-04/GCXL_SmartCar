@@ -5,4 +5,6 @@
 
 extern void hal_clock_init(void);
 
+void Error_Handler(void);
+
 #endif /* __MAIN_H */

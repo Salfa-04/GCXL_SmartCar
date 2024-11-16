@@ -55,7 +55,7 @@ void chassis_control_dest(int16_t x, int16_t y) {
 
   /// 等待位置环稳定
   mutex = 1, mutex_cnt = 4;
-  while (mutex && HAL_GetTick() - tick < 6000U);
+  while (mutex && HAL_GetTick() - tick < 10000U);
 }
 
 /// 控制相对角度
@@ -68,13 +68,17 @@ void chassis_control_angu(int8_t w) {
 
   /// 等待角度环稳定
   mutex = 1, mutex_cnt = 4;
-  while (mutex && HAL_GetTick() - tick < 3000U);
+  while (mutex && HAL_GetTick() - tick < 5000U);
+
+  hwt101_angle_clear();
 }
 
 /// 电机事件回调函数, 控制速度更新频率
 /// 原则上应该与陀螺仪更新速度一致
 void motor_event_callback(void) {
-  float OutputA = 0, OutputB = 0, OutputC = 0, OutputD = 0;
+  static float OutputA = 0, OutputB = 0, OutputC = 0, OutputD = 0;
+  static float prop_x = 0, prop_y = 0;
+
   motor_addup_get(&AddupA, &AddupB, &AddupC, &AddupD);
 
   /// 运动解算: cnt -> mm
@@ -109,7 +113,6 @@ void motor_event_callback(void) {
   ///
   /// 单位与 `WHEEL_RADIUS` `CHASSIS_RW` 的单位相同
   float vm = PID_MotA.output * CHASSIS_RW / (WHEEL_RADIUS * 6.f);
-  OutputA = -vm, OutputB = -vm, OutputC = vm, OutputD = vm;
 
   /// 运动解算: mm/s -> rpm X: V(mm/s); Y: V(mm/s); T: 60s/min
   ///
@@ -120,12 +123,10 @@ void motor_event_callback(void) {
   ///   V = (X - Y) * 30.f / (WHEEL_RADIUS * __PI);
   ///
   /// 单位与 `WHEEL_RADIUS` `CHASSIS_RW` 的单位相同
-  OutputA += (SpeedX - SpeedY) * 30.f / (WHEEL_RADIUS * __PI);
-  OutputB += (SpeedX + SpeedY) * 30.f / (WHEEL_RADIUS * __PI);
-  OutputC += (SpeedX - SpeedY) * 30.f / (WHEEL_RADIUS * __PI);
-  OutputD += (SpeedX + SpeedY) * 30.f / (WHEEL_RADIUS * __PI);
-
-  float prop_x = 0, prop_y = 0;
+  OutputA = (SpeedX - SpeedY) * 30.f / (WHEEL_RADIUS * __PI);
+  OutputB = (SpeedX + SpeedY) * 30.f / (WHEEL_RADIUS * __PI);
+  OutputC = (SpeedX - SpeedY) * 30.f / (WHEEL_RADIUS * __PI);
+  OutputD = (SpeedX + SpeedY) * 30.f / (WHEEL_RADIUS * __PI);
 
   if (PID_MotX.target) prop_x = fabsf(DestX / PID_MotX.target);
   if (PID_MotY.target) prop_y = fabsf(DestY / PID_MotY.target);
@@ -137,12 +138,12 @@ void motor_event_callback(void) {
                                              : 0;
 
   /// 并集 PID 输出
-  motor_speed_ctrl((int16_t)OutputA, (int16_t)OutputB, (int16_t)OutputC,
-                   (int16_t)OutputD, accel);
+  motor_speed_ctrl((int16_t)OutputA - vm, (int16_t)OutputB - vm,
+                   (int16_t)OutputC + vm, (int16_t)OutputD + vm, accel);
 
   if (mutex_cnt < 3) {
     if (fabsf(PID_MotA.output) < 15.f && fabsf(PID_MotX.output) < 15.f &&
-        fabsf(PID_MotY.output) < 15.f)
+        fabsf(PID_MotY.output) < 5.f)
       mutex = 0;
   } else {
     mutex_cnt--;

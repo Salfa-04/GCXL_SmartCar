@@ -61,7 +61,7 @@ void motor_init(void) {
   while (!motor_wait_ok(&MotPortD, MotIdD, 10)) motor_delay_long();
 }
 
-/// 发送数据到电机, 发送完成返回
+/// 发送数据到电机
 void motor_data_send(const uint8_t *a, const uint8_t *b, const uint8_t *c,
                      const uint8_t *d, uint8_t len) {
   if (MotPortA.hdmatx->Lock || MotPortA.hdmarx->Lock)

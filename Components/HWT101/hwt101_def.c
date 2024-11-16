@@ -1,3 +1,4 @@
+#include "main.h"
 #include "stm32f4xx_hal.h"
 
 // TX = PC10, RX = PC11
@@ -20,16 +21,22 @@ void hwt101_dma_init(void) {
   hdma_uart4_rx.Init.Priority = DMA_PRIORITY_HIGH;
   hdma_uart4_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
 
-  HAL_DMA_Init(&hdma_uart4_rx);
+  if (HAL_DMA_Init(&hdma_uart4_rx) != HAL_OK) {
+    Error_Handler();
+  }  // Initialize DMA
+
   __HAL_LINKDMA(&huart4, hdmarx, hdma_uart4_rx);
 
   /* DMA interrupt init */
   /* DMA1_Stream2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
 }
 
 void hwt101_uart_init(void) {
+  /* UART4 clock enable */
+  __HAL_RCC_UART4_CLK_ENABLE();
+
   /* UART4 handler init */
   huart4.Instance = UART4;
   huart4.Init.BaudRate = 115200;
@@ -40,19 +47,17 @@ void hwt101_uart_init(void) {
   huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart4.Init.OverSampling = UART_OVERSAMPLING_16;
 
-  /* UART4 init */
-  HAL_UART_Init(&huart4);
+  if (HAL_UART_Init(&huart4) != HAL_OK) {
+    Error_Handler();
+  }  // Initialize UART
 
   /* USART1 interrupt Init */
-  HAL_NVIC_SetPriority(UART4_IRQn, 1, 0);
+  HAL_NVIC_SetPriority(UART4_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(UART4_IRQn);
 }
 
 void hwt101_gpio_init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  /* UART4 clock enable */
-  __HAL_RCC_UART4_CLK_ENABLE();
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
   /**UART4 GPIO Configuration

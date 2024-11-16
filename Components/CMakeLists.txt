@@ -16,12 +16,12 @@ target_link_libraries(${CMAKE_PROJECT_NAME} INTERFACE
 ##########################################
 
 add_library(fset INTERFACE)
-file(GLOB COMPS_EXAMPLE fSetting/*.c)
+file(GLOB COMPS_FSET fSetting/*.c)
 target_include_directories(fset INTERFACE
     fSetting
 )
 target_sources(fset INTERFACE
-    ${COMPS_EXAMPLE}
+    ${COMPS_FSET}
 )
 
 ##########################################
@@ -29,12 +29,12 @@ target_sources(fset INTERFACE
 ##########################################
 
 add_library(imu INTERFACE)
-file(GLOB COMPS_EXAMPLE HWT101/*.c)
+file(GLOB COMPS_IMU HWT101/*.c)
 target_include_directories(imu INTERFACE
     HWT101
 )
 target_sources(imu INTERFACE
-    ${COMPS_EXAMPLE}
+    ${COMPS_IMU}
 )
 
 ##########################################
@@ -42,12 +42,12 @@ target_sources(imu INTERFACE
 ##########################################
 
 add_library(mot INTERFACE)
-file(GLOB COMPS_EXAMPLE Motor/*.c)
+file(GLOB COMPS_MOT Motor/*.c)
 target_include_directories(mot INTERFACE
     Motor
 )
 target_sources(mot INTERFACE
-    ${COMPS_EXAMPLE}
+    ${COMPS_MOT}
 )
 
 ##########################################
@@ -55,12 +55,12 @@ target_sources(mot INTERFACE
 ##########################################
 
 add_library(cha INTERFACE)
-file(GLOB COMPS_EXAMPLE Chassis/*.c)
+file(GLOB COMPS_CHA Chassis/*.c)
 target_include_directories(cha INTERFACE
     Chassis
 )
 target_sources(cha INTERFACE
-    ${COMPS_EXAMPLE}
+    ${COMPS_CHA}
 )
 
 ##########################################

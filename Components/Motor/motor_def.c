@@ -1,8 +1,8 @@
 #include "stm32f4xx_hal.h"
 
 /// 中断优先级
-#define PrePriority_GLOBAL 1
-#define PrePriority_DMA 0
+#define PrePriority_GLOBAL 5
+#define PrePriority_DMA 4
 
 #define MotPort UART_HandleTypeDef  // Motor X   DIR        TX   RX
 #define MotPortA huart2             // Motor A    CW  左前   D5  D6
@@ -60,10 +60,8 @@ void motor_uart_init(void) {
 void motor_gpio_init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-  /* UART clock enable */
+  /* U(s)ARTx clock enable */
   __HAL_RCC_UART5_CLK_ENABLE();
-
-  /* USART clock enable */
   __HAL_RCC_USART2_CLK_ENABLE();
   __HAL_RCC_USART3_CLK_ENABLE();
   __HAL_RCC_USART6_CLK_ENABLE();

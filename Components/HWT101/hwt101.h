@@ -12,11 +12,11 @@ void hwt101_angle_clear(void);
 /// 中断数据接收回调函数, 请把该函数放到中断服务函数中, 如:
 ///
 /// ```
-/// void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-///     if (huart->Instance == UART4 ) hwt101_event_callback();
+/// void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
+///     if (huart->Instance == huart4.Instance) hwt101_event_callback(Size);
 /// }
 /// ```
-void hwt101_event_callback(void);
+void hwt101_event_callback(uint16_t size);
 
 /// 偏航角数据接收回调函数: d(°)
 void hwt101_angle_callback(float angle);

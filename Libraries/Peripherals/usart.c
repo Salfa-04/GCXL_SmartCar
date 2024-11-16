@@ -1,14 +1,11 @@
 #include "usart.h"
 
 UART_HandleTypeDef huart1;
-DMA_HandleTypeDef hdma_usart1_tx;
-DMA_HandleTypeDef hdma_usart1_rx;
+static DMA_HandleTypeDef hdma_usart1_tx;
+static DMA_HandleTypeDef hdma_usart1_rx;
 
 void uart1_gpio_init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  /* USART1 clock enable */
-  __HAL_RCC_USART1_CLK_ENABLE();
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
   /**USART1 GPIO Configuration
@@ -57,14 +54,17 @@ void uart1_dma_init(void) {
 
   /* DMA Interrupt Init */
   /* DMA2_Stream5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream5_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
   /* DMA2_Stream7_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
 }
 
 void uart1_init(void) {
+  /* USART1 clock enable */
+  __HAL_RCC_USART1_CLK_ENABLE();
+
   /* UART1 handler init */
   huart1.Instance = USART1;
   huart1.Init.BaudRate = 115200;
@@ -81,7 +81,7 @@ void uart1_init(void) {
   HAL_UART_Init(&huart1);
 
   /* USART1 interrupt Init */
-  HAL_NVIC_SetPriority(USART1_IRQn, 3, 0);
+  HAL_NVIC_SetPriority(USART1_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(USART1_IRQn);
 }
 

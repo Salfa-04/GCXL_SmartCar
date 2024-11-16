@@ -9,7 +9,7 @@
             "chip": "STM32F407ZGTx",
             "flashingConfig": {
                 "flashingEnabled": true,
-                "haltAfterReset": false,
+                "haltAfterReset": true,
                 "fullChipErase": false,
                 "formatOptions": {
                     "binaryFormat": "elf"

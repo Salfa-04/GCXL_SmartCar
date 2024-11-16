@@ -1,7 +1,5 @@
 #include "hwt101.h"
 
-#include <stdint.h>
-
 // TX = PC10, RX = PC11
 #define UART_USED huart4
 void hwt101_uart_init(void);
@@ -42,7 +40,7 @@ void hwt101_init(void) {
 
   /// 接收数据, 并过滤掉无效数据
   HAL_UARTEx_ReceiveToIdle(&UART_USED, temp, sizeof(temp), &len, HAL_MAX_DELAY);
-  HAL_UART_Receive_DMA(&UART_USED, buffer, sizeof(buffer));
+  HAL_UARTEx_ReceiveToIdle_DMA(&UART_USED, buffer, sizeof(buffer));
 }
 
 void hwt101_angle_clear(void) {
@@ -54,36 +52,33 @@ void hwt101_angle_clear(void) {
 
   // 重新接收数据
   HAL_UARTEx_ReceiveToIdle(&UART_USED, temp, sizeof(temp), &len, HAL_MAX_DELAY);
-  HAL_UART_Receive_DMA(&UART_USED, buffer, sizeof(buffer));
+  HAL_UARTEx_ReceiveToIdle_DMA(&UART_USED, buffer, sizeof(buffer));
 }
 
-void hwt101_event_callback(void) {
+void hwt101_event_callback(uint16_t size) {
   ///  0 ~ 10 : 0x55 0x52 L8 SUM : 角速度 dps
   /// 11 ~ 21 : 0x55 0x53 L8 SUM : 偏航角 d(°)
-  HAL_UART_Receive_DMA(&UART_USED, buffer, sizeof(buffer));
+  HAL_UARTEx_ReceiveToIdle_DMA(&UART_USED, buffer, sizeof(buffer));
+  static short temp_a = 0, temp_b = 0;
 
   uint8_t sum_a = 0x55, sum_b = 0x55;
   for (uint8_t i = 1; i < 10; i++) sum_a += buffer[i];
   for (uint8_t i = 12; i < 21; i++) sum_b += buffer[i];
 
-  if (sum_a == buffer[10] && sum_b == buffer[21]) {
-    short temp_a = (short)buffer[7] << 8 | buffer[6];
-    short temp_b = (short)buffer[18] << 8 | buffer[17];
+  if (size != sizeof(buffer) || (sum_a == buffer[10] && sum_b == buffer[21])) {
+    temp_a = (short)buffer[7] << 8 | buffer[6];
+    temp_b = (short)buffer[18] << 8 | buffer[17];
     if (buffer[12] == 0x53)  // 偏航角: d(°)
       hwt101_angle_callback((float)temp_b * 180.f / 32768.f);
     else
       hwt101_angle_callback((float)temp_a * 180.f / 32768.f);
-  } else {
-    HAL_UART_DMAStop(&UART_USED);
-    HAL_UARTEx_ReceiveToIdle(&UART_USED, temp, sizeof(temp), &len,
-                             HAL_MAX_DELAY);
-    HAL_UART_Receive_DMA(&UART_USED, buffer, sizeof(buffer));
   }
 }
 
 /// 串口接收回调函数
-__weak void HAL_UART_RxCpltCallback(UART_HandleTypeDef *U) {
-  if (U->Instance == UART_USED.Instance) hwt101_event_callback();
+__weak void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,
+                                       uint16_t Size) {
+  if (huart->Instance == huart4.Instance) hwt101_event_callback(Size);
 }
 
 /// 偏航角数据接收回调函数: d(°)
