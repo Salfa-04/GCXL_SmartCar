@@ -1,6 +1,6 @@
 #include "fsetting.h"
 
-#include <stdint.h>
+#include <type_def.h>
 
 #define FLASH_ADDR 0x080E0000U        // Sector 11
 #define FLASH_SIZE 0x00020000U        // 128k bytes

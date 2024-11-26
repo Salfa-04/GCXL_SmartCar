@@ -14,6 +14,7 @@ set(CMAKE_PROJECT_URL               "api.salfa.cc")
 
 set(PRINTF_FLOAT_SUPPORT            OFF)    # BOOL Y/N ON/OFF
 set(CMAKE_BUILD_TYPE                Debug)  # Release or Debug
+# set(CMAKE_BUILD_TYPE                Release)  # Release or Debug
 
 set(CMAKE_C_STANDARD                11)     # Min: 11..
 set(CMAKE_CXX_STANDARD              11)     # Min: 11..
@@ -54,11 +55,13 @@ set(CMAKE_LINKER                    ${TOOLCHAIN_PREFIX}g++)
 set(CMAKE_OBJCOPY                   ${TOOLCHAIN_PREFIX}objcopy)
 set(CMAKE_SIZE                      ${TOOLCHAIN_PREFIX}size)
 
+set(OPENOCD                         openocd)
+set(OPENOCD_CFG                     -f../openocd.cfg)
+
 set(PROBE_RS                        probe-rs)
 set(PROBE_FLAGS                     STM32F407ZGTx) # --connect-under-reset
 set(PROBE_DL                        download --chip ${PROBE_FLAGS})
-set(PROBE_DBG                       debug --chip ${PROBE_FLAGS})
-set(PROBE_GDB                       gdb --chip ${PROBE_FLAGS})
+set(PROBE_RST                       reset --chip ${PROBE_FLAGS})
 
 
 
@@ -89,9 +92,9 @@ message("Float Printf Support: "    ${PRINTF_FLOAT_SUPPORT})
 set(CMAKE_C_FLAGS_DEBUG             "-O0 -g3")
 set(CMAKE_ASM_FLAGS_DEBUG           "-O0 -g3")
 set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g3")
-set(CMAKE_C_FLAGS_RELEASE           "-Ofast -s -g0 -DNODEBUG")
-set(CMAKE_ASM_FLAGS_RELEASE         "-Ofast -s -g0 -DNODEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE         "-Ofast -s -g0 -DNODEBUG")
+set(CMAKE_C_FLAGS_RELEASE           "-O2 -s")
+set(CMAKE_ASM_FLAGS_RELEASE         "-O2 -s")
+set(CMAKE_CXX_FLAGS_RELEASE         "-O2 -s")
 
 # Set the project information
 unset(CMAKE_EXECUTABLE_SUFFIX)
@@ -118,6 +121,23 @@ set(CMAKE_CXX_LINK_FLAGS    "${CMAKE_C_LINK_FLAGS} -Wl,--start-group -lstdc++ -l
 ## User Customizations
 ######################################
 
+# Add openocd target
+add_custom_target(openocd USES_TERMINAL
+    COMMENT "Firing up ${OPENOCD} stub"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMAND ${OPENOCD} ${OPENOCD_CFG}
+    DEPENDS ${CMAKE_PROJECT_NAME}
+)
+
+# Add flash target
+set(OPENOCD_DL -c\"program ${CMAKE_PROJECT_NAME} preverify verify reset exit\")
+add_custom_target(flash USES_TERMINAL
+    COMMENT "Download binary using ${OPENOCD}"
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMAND ${OPENOCD} ${OPENOCD_CFG} ${OPENOCD_DL}
+    DEPENDS ${CMAKE_PROJECT_NAME}
+)
+
 # Add download target
 add_custom_target(download USES_TERMINAL
     COMMENT "Download binary using ${PROBE_RS}"
@@ -126,12 +146,11 @@ add_custom_target(download USES_TERMINAL
     DEPENDS ${CMAKE_PROJECT_NAME}
 )
 
-# Add debug(gdb) target
-add_custom_target(gdb USES_TERMINAL
-    COMMENT "Firing up GDB stub using ${PROBE_RS}"
+# Add reset target
+add_custom_target(reset USES_TERMINAL
+    COMMENT "Reset the target attached to ${PROBE_RS}"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMAND ${PROBE_RS} ${PROBE_GDB}
-    DEPENDS download
+    COMMAND ${PROBE_RS} ${PROBE_RST}
 )
 
 # Add debug(cmd) target

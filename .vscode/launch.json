@@ -2,6 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "preLaunchTask": "cmake: ninja build",
             "type": "probe-rs-debug",
             "request": "launch",
             "name": "Probe-rs Debug",
@@ -26,22 +27,20 @@
             "consoleLogLevel": "Console",
         },
         {
-            "preLaunchTask": "ninja: build",
+            "preLaunchTask": "cmake: ninja build",
             "type": "cortex-debug",
             "request": "launch",
-            "name": "Debug with probe-rs",
+            "name": "OpenOCD Debug",
             "cwd": "${workspaceRoot}",
-            "servertype": "external",
-            "gdbTarget": "localhost:1337",
+            "servertype": "openocd",
             "runToEntryPoint": "main",
-            "showDevDebugOutput": "raw",
-            "breakAfterReset": true,
+            "showDevDebugOutput": "parsed",
+            "interface": "swd",
             "executable": "build/${workspaceFolderBasename}",
-            "overrideLaunchCommands": [
-                "interpreter-exec console \"monitor reset halt\"",
-                // "target-download", // 调试前请手动下载
-                // "interpreter-exec console \"monitor reset halt\"",
-                "-enable-pretty-printing"
+            "svdPath": "Keil::STM32F4xx_DFP@3.0.0",
+            "deviceName": "STM32F407ZGTx",
+            "configFiles": [
+                "${workspaceRoot}/openocd.cfg"
             ],
         },
     ]

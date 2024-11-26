@@ -1,8 +1,6 @@
 #include "motor.h"
 
-#include <stdint.h>
-
-#include "stm32f4xx_hal_uart.h"
+#include "type_def.h"
 
 //   UART-X       TX   RX
 //   huart2       D5  D6
@@ -34,7 +32,7 @@ void motor_dma_init(void);
 void motor_delay_short(void);
 void motor_delay_long(void);
 
-_Bool motor_wait_ok(MotPort *mot, uint8_t id, unsigned timeout) {
+bool_t motor_wait_ok(MotPort *mot, uint8_t id, unsigned timeout) {
   uint8_t rx_buffer[24], offsize = 0;
   uint8_t tx_buffer[3] = {id, 0x1F, 0x6B};
   HAL_UART_Transmit(mot, tx_buffer, sizeof(tx_buffer), timeout);
@@ -101,8 +99,8 @@ void motor_data_read(const uint8_t *ta, const uint8_t *tb, const uint8_t *tc,
   HAL_UART_Receive_DMA(&MotPortD, rd, rlen);
 
   /// 等待接收完成
-  while (MotPortA.hdmarx->Lock != HAL_UNLOCKED ||
-         MotPortB.hdmarx->Lock != HAL_UNLOCKED ||
-         MotPortC.hdmarx->Lock != HAL_UNLOCKED ||
+  while (MotPortA.hdmarx->Lock != HAL_UNLOCKED &&
+         MotPortB.hdmarx->Lock != HAL_UNLOCKED &&
+         MotPortC.hdmarx->Lock != HAL_UNLOCKED &&
          MotPortD.hdmarx->Lock != HAL_UNLOCKED);
 }

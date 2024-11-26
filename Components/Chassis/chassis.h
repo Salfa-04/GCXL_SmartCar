@@ -1,12 +1,7 @@
 #ifndef __CHASSIS_H
 #define __CHASSIS_H
 
-#include <stdint.h>
-
-/// CHASSIS_RW = CHASSIS_RA + CHASSIS_RB
-#define CHASSIS_RW 141.f   // 单位 mm
-#define WHEEL_RADIUS 38.f  // 单位 mm
-#define __PI 3.14159265358979323846f
+#include <type_def.h>
 
 void chassis_init(void);
 
@@ -14,9 +9,14 @@ void chassis_init(void);
 /// !!! 不要在中断里使用
 void chassis_control_dest(int16_t x, int16_t y);
 
+/// 控制相对坐标系下的绝对位置, 单位为 mm
+/// !!! 不要在中断里使用
+void chassis_control_point(int16_t x, int16_t y);
+
 /// 控制相对角度
 /// !!! 不要在中断里使用
-void chassis_control_angu(int8_t w);
+void chassis_angle_tanp(void);
+void chassis_angle_tanm(void);
 
 /// 电机事件回调函数, 控制速度更新频率
 /// ```

@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <type_def.h>
 
 #include "motor.h"
 
@@ -16,8 +16,7 @@ static uint8_t MotSpeed[4][8] = {
 };
 
 /// 电机速度控制, 单位 rpm, 0 ~ ±5000
-void motor_speed_ctrl(int16_t a, int16_t b, int16_t c, int16_t d,
-                      uint8_t accel) {
+void motor_speed_ctrl(int16_t a, int16_t b, int16_t c, int16_t d) {
   // 电机正反设置
   MotSpeed[0][2] = CW, MotSpeed[2][2] = CCW;
   MotSpeed[1][2] = CW, MotSpeed[3][2] = CCW;
@@ -28,13 +27,13 @@ void motor_speed_ctrl(int16_t a, int16_t b, int16_t c, int16_t d,
   if (d < 0) MotSpeed[3][2] = CW, d *= -1;
 
   // 电机加速度设置
-  MotSpeed[0][5] = MotSpeed[1][5] = MotSpeed[2][5] = MotSpeed[3][5] = accel;
+  MotSpeed[0][5] = MotSpeed[1][5] = MotSpeed[2][5] = MotSpeed[3][5] = 0;
 
   // 电机速度设置
-  MotSpeed[0][3] = a >> 8, MotSpeed[0][4] = a & 0xFF;
-  MotSpeed[1][3] = b >> 8, MotSpeed[1][4] = b & 0xFF;
-  MotSpeed[2][3] = c >> 8, MotSpeed[2][4] = c & 0xFF;
-  MotSpeed[3][3] = d >> 8, MotSpeed[3][4] = d & 0xFF;
+  MotSpeed[0][3] = (a & 0xFF00) >> 8, MotSpeed[0][4] = a & 0xFF;
+  MotSpeed[1][3] = (b & 0xFF00) >> 8, MotSpeed[1][4] = b & 0xFF;
+  MotSpeed[2][3] = (c & 0xFF00) >> 8, MotSpeed[2][4] = c & 0xFF;
+  MotSpeed[3][3] = (d & 0xFF00) >> 8, MotSpeed[3][4] = d & 0xFF;
 
   motor_data_send(MotSpeed[0], MotSpeed[1], MotSpeed[2], MotSpeed[3],
                   sizeof(MotSpeed[0]));

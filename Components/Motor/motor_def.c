@@ -1,4 +1,5 @@
 #include "stm32f4xx_hal.h"
+#include "type_def.h"
 
 /// 中断优先级
 #define PrePriority_GLOBAL 5
@@ -33,7 +34,7 @@ UART_DEF_BUILDER(D, usart, 6)
   huart##x.Init.Mode = UART_MODE_TX_RX;              \
   huart##x.Init.HwFlowCtl = UART_HWCONTROL_NONE;     \
   huart##x.Init.OverSampling = UART_OVERSAMPLING_16; \
-  HAL_UART_Init(&huart##x);
+  if (HAL_UART_Init(&huart##x) != HAL_OK) Error_Handler();
 
 #define UART_NVIC_BUILDER(n)                             \
   HAL_NVIC_SetPriority(n##_IRQn, PrePriority_GLOBAL, 0); \
@@ -121,7 +122,7 @@ void motor_gpio_init(void) {
   hdma_##x##n##_rx.Init.Mode = DMA_NORMAL;                         \
   hdma_##x##n##_rx.Init.Priority = DMA_PRIORITY_HIGH;              \
   hdma_##x##n##_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;           \
-  HAL_DMA_Init(&hdma_##x##n##_rx);                                 \
+  if (HAL_DMA_Init(&hdma_##x##n##_rx) != HAL_OK) Error_Handler();  \
   __HAL_LINKDMA(&huart##n, hdmarx, hdma_##x##n##_rx);              \
   hdma_##x##n##_tx.Instance = dt;                                  \
   hdma_##x##n##_tx.Init.Channel = DMA_CHANNEL_##ch;                \
@@ -133,7 +134,7 @@ void motor_gpio_init(void) {
   hdma_##x##n##_tx.Init.Mode = DMA_NORMAL;                         \
   hdma_##x##n##_tx.Init.Priority = DMA_PRIORITY_VERY_HIGH;         \
   hdma_##x##n##_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;           \
-  HAL_DMA_Init(&hdma_##x##n##_tx);                                 \
+  if (HAL_DMA_Init(&hdma_##x##n##_tx) != HAL_OK) Error_Handler();  \
   __HAL_LINKDMA(&huart##n, hdmatx, hdma_##x##n##_tx);
 
 void motor_dma_init(void) {

@@ -3,7 +3,7 @@
 
 #include "stm32f4xx_hal.h"
 
-extern void hal_clock_init(void);
+extern void system_init(void);
 
 void Error_Handler(void);
 

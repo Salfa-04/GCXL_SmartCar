@@ -1,15 +1,14 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "type": "shell",
-            "command": "ninja",
-            "args": [
-                "-C",
-                "build"
-            ],
-            "isBackground": false,
-            "label": "ninja: build",
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"command": "cmake -G Ninja -B build && cmake --build build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"label": "cmake: ninja build"
+		}
+	]
 }

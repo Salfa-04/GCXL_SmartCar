@@ -9,7 +9,7 @@
 
 /* Includes */
 #include <errno.h>
-#include <stdint.h>
+#include <type_def.h>
 
 /**
  * Pointer to the current high watermark of the heap usage

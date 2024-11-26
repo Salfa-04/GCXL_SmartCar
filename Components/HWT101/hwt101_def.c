@@ -43,7 +43,7 @@ void hwt101_uart_init(void) {
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;
-  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.Mode = UART_MODE_RX;
   huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart4.Init.OverSampling = UART_OVERSAMPLING_16;
 
@@ -61,10 +61,10 @@ void hwt101_gpio_init(void) {
 
   __HAL_RCC_GPIOA_CLK_ENABLE();
   /**UART4 GPIO Configuration
-  PC10     ------> UART4_TX
-  PC11     ------> UART4_RX
+  // PC10     ------> UART4_TX
+     PC11     ------> UART4_RX
   */
-  GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_11;
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;

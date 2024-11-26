@@ -6,8 +6,6 @@
 extern UART_HandleTypeDef huart1;
 
 void uart1_init(void);
-void uprint(const uint8_t *data, uint8_t len);
-void uprintf(const char *fmt, ...);
 
 void USART1_IRQHandler(void);
 void DMA2_Stream5_IRQHandler(void);
