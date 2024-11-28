@@ -9,14 +9,9 @@ void chassis_init(void);
 /// !!! 不要在中断里使用
 void chassis_control_dest(int16_t x, int16_t y);
 
-/// 控制相对坐标系下的绝对位置, 单位为 mm
+/// 控制相对坐标系下的绝对坐标, 单位为 mm
 /// !!! 不要在中断里使用
-void chassis_control_point(int16_t x, int16_t y);
-
-/// 控制相对角度
-/// !!! 不要在中断里使用
-void chassis_angle_tanp(void);
-void chassis_angle_tanm(void);
+void chassis_control_point(int16_t x, int16_t y, int16_t a);
 
 /// 电机事件回调函数, 控制速度更新频率
 /// ```

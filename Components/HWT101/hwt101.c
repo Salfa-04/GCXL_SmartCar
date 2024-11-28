@@ -58,7 +58,7 @@ void hwt101_event_callback(uint16_t size) {
     temp_b = (short)buffer[18] << 8 | buffer[17];
     if (buffer[12] == 0x53)  // 偏航角: d(°)
       hwt101_angle_callback((fp32)temp_b * 180.f / 32768.f);
-    else
+    else if (buffer[1] == 0x53)
       hwt101_angle_callback((fp32)temp_a * 180.f / 32768.f);
   }
 }

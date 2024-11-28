@@ -1,7 +1,5 @@
 #include "motor.h"
 
-volatile fp32 _ADUP_PROP = ADUP_PROP;
-
 static uint8_t MotAupA[8] = {0};
 static uint8_t MotAupB[8] = {0};
 static uint8_t MotAupC[8] = {0};
@@ -50,6 +48,6 @@ void motor_addup_get(fp32 *DestX, fp32 *DestY) {
   ///   N = N * π * WHEEL_RADIUS / 131072.f;
   ///
   /// 单位与 `WHEEL_RADIUS` `CHASSIS_RW` 的单位相同
-  *DestX = (AdupA + AdupB + AdupC + AdupD) * _ADUP_PROP;
-  *DestY = (-AdupA + AdupB - AdupC + AdupD) * _ADUP_PROP;
+  *DestX = (AdupA + AdupB + AdupC + AdupD) * ADUP_PROP;
+  *DestY = (-AdupA + AdupB - AdupC + AdupD) * ADUP_PROP;
 }

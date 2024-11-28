@@ -9,13 +9,13 @@
 #define ANGLE_90DEG (90.f - 0.045f)
 
 /// 位置环 PIDS 参数
-#define MT_KP 3.5f
+#define MT_KP 3U
 #define MT_KS 8U
 #define MT_MAXI 1U
 #define MT_MAXOUT 600U
 
 /// 角度环 PIDS 参数
-#define MA_KP 6.5f
+#define MA_KP 6U
 #define MA_KS 2.5f
 #define MA_MAXI 1U
 #define MA_MAXOUT 350U
@@ -27,7 +27,8 @@ static pid_t PID_MotY = {0};
 static pid_t PID_MotA = {0};
 
 static bool_t mutex = 0;
-static uint8_t mutex_cnt = 0;
+static int8_t mutex_cnt = 0;
+static int8_t direction = 0;
 
 void chassis_init(void) {
   hwt101_init();
@@ -40,6 +41,7 @@ void chassis_init(void) {
 }
 
 /// 控制相对位置, 单位为 mm
+/// 坐标为相对坐标系下的位置
 /// !!! 不要在中断里使用
 void chassis_control_dest(int16_t x, int16_t y) {
   PID_MotX.target += (fp32)x, PID_MotY.target += (fp32)y;
@@ -51,40 +53,42 @@ void chassis_control_dest(int16_t x, int16_t y) {
   while (mutex && HAL_GetTick() - tick < 50000U);
 }
 
-/// 控制相对坐标系下的绝对位置, 单位为 mm
+/// 控制绝对位置, 右手坐标系, 单位为 mm
+///
+/// 以底盘初始方向为基准:
+///
+/// D: 0 底盘朝上
+/// D: 1 底盘朝左
+/// D: 2 底盘朝下
+/// D: 3 底盘朝右
+///
+/// 坐标为绝对坐标系下的位置
+///
 /// !!! 不要在中断里使用
-void chassis_control_point(int16_t x, int16_t y) {
-  PID_MotX.target = (fp32)x, PID_MotY.target = (fp32)y;
+void chassis_control_point(int16_t x, int16_t y, int16_t d) {
+  static int16_t lx = 0, ly = 0;  // 上一次的状态
+  int16_t dx = 0, dy = 0, dd = 0, tx = 0, ty = 0;
 
-  uint32_t tick = HAL_GetTick();
+  tx = x - lx, ty = y - ly, dd = d - direction;
+  lx = x, ly = y, direction = d;  // 记录上一次状态
+
+  if (direction % 4 == 0)       //* 朝上
+    dx = tx, dy = ty;           //
+  else if (direction % 4 == 1)  //* 朝左
+    dx = ty, dy = -tx;          //
+  else if (direction % 4 == 2)  //* 朝下
+    dx = -tx, dy = -ty;         //
+  else if (direction % 4 == 3)  //* 朝右
+    dx = -ty, dy = tx;
+
+  PID_MotX.target += (fp32)dx;
+  PID_MotY.target += (fp32)dy;
+  PID_MotA.target += (fp32)dd * ANGLE_90DEG;
 
   /// 等待位置环稳定
   mutex = 1, mutex_cnt = 7;
+  uint32_t tick = HAL_GetTick();
   while (mutex && HAL_GetTick() - tick < 50000U);
-}
-
-/// 正向旋转 90°
-/// !!! 不要在中断里使用
-void chassis_angle_tanp(void) {
-  PID_MotA.target += ANGLE_90DEG;
-
-  uint32_t tick = HAL_GetTick();
-
-  /// 等待角度环稳定
-  mutex = 1, mutex_cnt = 7;
-  while (mutex && HAL_GetTick() - tick < 5000U);
-}
-
-/// 逆向旋转 90°
-/// !!! 不要在中断里使用
-void chassis_angle_tanm(void) {
-  PID_MotA.target -= ANGLE_90DEG;
-
-  uint32_t tick = HAL_GetTick();
-
-  /// 等待角度环稳定
-  mutex = 1, mutex_cnt = 7;
-  while (mutex && HAL_GetTick() - tick < 5000U);
 }
 
 /// 电机事件回调函数, 控制速度更新频率
@@ -134,7 +138,7 @@ void motor_event_callback(void) {
 
   /// 位置环稳定后解锁
   if (mutex_cnt < 3) {
-    if (fabsf(PID_MotA.output) < 15.f && fabsf(PID_MotX.output) < 15.f &&
+    if (fabsf(PID_MotA.output) < 10.f && fabsf(PID_MotX.output) < 5.f &&
         fabsf(PID_MotY.output) < 5.f)
       mutex = 0;
   } else {

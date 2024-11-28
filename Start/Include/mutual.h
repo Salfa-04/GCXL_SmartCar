@@ -3,7 +3,7 @@
 
 #include "stm32f4xx_hal.h"
 
-uint8_t* mutual_handle(uint8_t* data);
+int16_t* mutual_handle(uint8_t* data);
 
 /// @brief Mutual UART handle
 /// !!!串口1

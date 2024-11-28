@@ -1,9 +1,10 @@
 #include "main.h"
 
+// #define DEBUG_MODE
+
 #include "board_led.h"
 #include "chassis.h"
 #include "hwt101.h"
-#include "motor.h"
 #include "mutual.h"
 #include "type_def.h"
 #include "usart.h"
@@ -31,8 +32,18 @@ int main(void) {
   BLED_OFF();
   is_start = 1;
 
+#ifdef DEBUG_MODE
+
+  static int16_t x = 0, y = 0, a = 0;
+
   for (;;) {
-    uint8_t* data = NULL;
+    chassis_control_point(x, y, a);
+  }
+
+#endif
+
+  for (;;) {
+    int16_t* data = NULL;
 
     for (;;) {
       uint16_t len = 0;
@@ -40,33 +51,26 @@ int main(void) {
       data = mutual_handle(buffer);
 
       if (len == 0) continue;
-      if (len == sizeof(buffer) && data[0] < 0x03) break;
+      if (len == sizeof(buffer)) break;
 
       mutual_buff[2] = 0x02;  // 失败
       uprint(mutual_buff, sizeof(mutual_buff));
     }
-
-    if (data == NULL) continue;
 
     //!   0]   状态位 len1 : 0xFF失败,
     //!                     0x00正向旋转, 0x01逆向旋转,
     //!                     0x02控制相对坐标系下的绝对位置
     //!   1|2] 数据位 len2 : DataH, DataL
 
+    if (data == NULL) continue;
+
     mutual_buff[2] = 0x01;  // 成功
     HAL_UARTEx_ReceiveToIdle_DMA(&huart1, temp, sizeof(temp));
 
-    if (data[0] == 0x00) {
-      chassis_angle_tanp();
-    }
-
-    if (data[0] == 0x01) {
-      chassis_angle_tanm();
-    }
-
-    if (data[0] == 0x02) {
-      chassis_control_point((int16_t)((data[1] << 8) | data[2]),
-                            (int16_t)((data[3] << 8) | data[4]));
+    if (data[0] == 0x10) {  // 相对模式
+      chassis_control_dest(data[1], data[2]);
+    } else {  // 坐标模式
+      chassis_control_point(data[1], data[2], data[0]);
     }
 
     /// 为避免数据竞争, 请单线程使用 `mutual_buff` 变量
@@ -79,7 +83,7 @@ int main(void) {
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size) {
   if (huart->Instance == USART1) {
-    static uint8_t error_cmd[4] = {0x07, 0x23, 0x03, 0xC8};
+    static const uint8_t error_cmd[4] = {0x07, 0x23, 0x03, 0xC8};
     uprint(error_cmd, sizeof(error_cmd));  // 发送未完成命令
     HAL_UARTEx_ReceiveToIdle_DMA(&huart1, temp, sizeof(temp));
   } else if (huart->Instance == huart4.Instance)
