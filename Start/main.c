@@ -1,6 +1,6 @@
 #include "main.h"
 
-// #define DEBUG_MODE
+#define DEBUG_MODE
 
 #include "board_led.h"
 #include "chassis.h"

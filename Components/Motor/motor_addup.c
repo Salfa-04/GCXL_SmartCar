@@ -20,8 +20,8 @@ static const uint8_t MotCnt[4][3] = {
 };
 
 /// 电机脉冲数获取, 一圈 65536 cnt
-void motor_addup_get(fp32 *DestX, fp32 *DestY) {
-  static fp32 AdupA = 0.f, AdupB = 0.f, AdupC = 0.f, AdupD = 0.f;
+void motor_addup_get(fp32 *destX) {  // destX len 4
+  fp32 AdupA = 0.f, AdupB = 0.f, AdupC = 0.f, AdupD = 0.f;
 
   motor_data_read(MotCnt[0], MotCnt[1], MotCnt[2], MotCnt[3], sizeof(MotCnt[0]),
                   MotAupA, MotAupB, MotAupC, MotAupD, sizeof(MotAupA));
@@ -36,18 +36,5 @@ void motor_addup_get(fp32 *DestX, fp32 *DestY) {
   if (!MotAupC[2]) AdupC = -AdupC;
   if (!MotAupD[2]) AdupD = -AdupD;
 
-  /// 运动解算: cnt -> mm
-  /// X = (+ A + B + C + D) / 4;                cnt
-  /// Y = (- A + B - C + D) / 4;                cnt
-  /// W = (- A - B + C + D) / 4;                cnt
-  ///
-  /// Line Velocity (线速度): cnt -> mm
-  /// N = N * 2π / 65536.f                      rad
-  /// N = N * WHEEL_RADIUS;                     mm
-  /// SO:
-  ///   N = N * π * WHEEL_RADIUS / 131072.f;
-  ///
-  /// 单位与 `WHEEL_RADIUS` `CHASSIS_RW` 的单位相同
-  *DestX = (AdupA + AdupB + AdupC + AdupD) * ADUP_PROP;
-  *DestY = (-AdupA + AdupB - AdupC + AdupD) * ADUP_PROP;
+  destX[0] = AdupA, destX[1] = AdupB, destX[2] = AdupC, destX[3] = AdupD;
 }

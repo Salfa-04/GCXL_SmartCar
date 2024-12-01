@@ -88,20 +88,35 @@ void chassis_control_point(int16_t x, int16_t y, int16_t d) {
   /// 等待位置环稳定
   mutex = 1, mutex_cnt = 7;
   uint32_t tick = HAL_GetTick();
-  while (mutex && HAL_GetTick() - tick < 50000U);
+  while (mutex && HAL_GetTick() - tick < 5000U);
 }
 
 /// 电机事件回调函数, 控制速度更新频率
 /// 原则上应该与陀螺仪更新速度一致
 void motor_event_callback(void) {
-  static fp32 OutputA = 0, OutputB = 0, OutputC = 0, OutputD = 0;
-  static fp32 destx = 0, desty = 0;
+  static fp32 OutputA = 0, OutputB = 0, OutputC = 0, OutputD = 0, dest[4] = {0};
 
-  motor_addup_get(&destx, &desty);
+  motor_addup_get(dest);
   const fp32 angle = hwt101_get_angle();
 
-  pid_update(&PID_MotX, (int)destx);
-  pid_update(&PID_MotY, (int)desty);
+  /// 运动解算: cnt -> mm
+  /// X = (+ A + B + C + D) / 4;                cnt
+  /// Y = (- A + B - C + D) / 4;                cnt
+  /// W = (- A - B + C + D) / 4;                cnt
+  ///
+  /// Line Velocity (线速度): cnt -> mm
+  /// N = N * 2π / 65536.f                      rad
+  /// N = N * WHEEL_RADIUS;                     mm
+  /// SO:
+  ///   N = N * π * WHEEL_RADIUS / 131072.f;
+  ///
+  /// 单位与 `WHEEL_RADIUS` `CHASSIS_RW` 的单位相同
+  fp32 destX = (dest[0] + dest[1] + dest[2] + dest[3]) * ADUP_PROP;
+  fp32 destY = (-dest[0] + dest[1] - dest[2] + dest[3]) * ADUP_PROP;
+
+  pid_update(&PID_MotX, (int)destX);
+  pid_update(&PID_MotY, (int)destY);
+
   fp32 SpeedX = PID_MotX.output, SpeedY = PID_MotY.output;
 
   /// 运动解算: dps -> rpm W: V(dps); T: 60s/min

@@ -25,6 +25,6 @@
 
 void motor_init(void);
 void motor_speed_ctrl(int16_t a, int16_t b, int16_t c, int16_t d);
-void motor_addup_get(fp32 *DestX, fp32 *DestY);
+void motor_addup_get(fp32 *destX);
 
 #endif /* __MOTOR_H */
