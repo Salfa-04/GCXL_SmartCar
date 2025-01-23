@@ -47,6 +47,12 @@ UART_DEF_BUILDER(D, usart, 6)
   HAL_NVIC_EnableIRQ(dt##_IRQn);
 
 void motor_uart_init(void) {
+  /* U(s)ARTx clock enable */
+  __HAL_RCC_UART5_CLK_ENABLE();
+  __HAL_RCC_USART2_CLK_ENABLE();
+  __HAL_RCC_USART3_CLK_ENABLE();
+  __HAL_RCC_USART6_CLK_ENABLE();
+
   UART_INIT_BUILDER(2, USART2)
   UART_INIT_BUILDER(5, UART5)
   UART_INIT_BUILDER(3, USART3)
@@ -60,12 +66,6 @@ void motor_uart_init(void) {
 
 void motor_gpio_init(void) {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  /* U(s)ARTx clock enable */
-  __HAL_RCC_UART5_CLK_ENABLE();
-  __HAL_RCC_USART2_CLK_ENABLE();
-  __HAL_RCC_USART3_CLK_ENABLE();
-  __HAL_RCC_USART6_CLK_ENABLE();
 
   /* GPIO clock enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();

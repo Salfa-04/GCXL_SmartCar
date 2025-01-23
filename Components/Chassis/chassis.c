@@ -30,14 +30,21 @@ static bool_t mutex = 0;
 static int8_t mutex_cnt = 0;
 static int8_t direction = 0;
 
+/// 底盘初始化
+///
+///! 外设自检失败会导致底盘无法正常工作
 void chassis_init(void) {
   hwt101_init();
   motor_init();
 
+  const fp32 pids_xy[4] = {MT_KP, 0, 0, MT_KS};
+  const fp32 pids_an[4] = {MA_KP, 0, 0, MA_KS};
+  const fp32 pids_out[2] = {MT_MAXI, MT_MAXOUT};
+
   /// 初始化 位置环 角度环 PID
-  pid_init(&PID_MotX, MT_KP, 0, 0, MT_KS, MT_MAXI, MT_MAXOUT);
-  pid_init(&PID_MotY, MT_KP, 0, 0, MT_KS, MT_MAXI, MT_MAXOUT);
-  pid_init(&PID_MotA, MA_KP, 0, 0, MA_KS, MA_MAXI, MA_MAXOUT);
+  pid_init(&PID_MotX, pids_xy, pids_out);
+  pid_init(&PID_MotY, pids_xy, pids_out);
+  pid_init(&PID_MotA, pids_an, pids_out);
 }
 
 /// 控制相对位置, 单位为 mm
@@ -94,7 +101,12 @@ void chassis_control_point(int16_t x, int16_t y, int16_t d) {
 /// 电机事件回调函数, 控制速度更新频率
 /// 原则上应该与陀螺仪更新速度一致
 void motor_event_callback(void) {
-  static fp32 OutputA = 0, OutputB = 0, OutputC = 0, OutputD = 0, dest[4] = {0};
+  /// OutPut[4] 为电机速度输出:
+  /// [0]: Motor A    CW  左前
+  /// [1]: Motor B    CW  左后
+  /// [2]: Motor C   CCW  右后
+  /// [3]: Motor D   CCW  右前
+  static fp32 Output[4] = {0}, dest[4] = {0};
 
   motor_addup_get(dest);
   const fp32 angle = hwt101_get_angle();
@@ -111,13 +123,13 @@ void motor_event_callback(void) {
   ///   N = N * π * WHEEL_RADIUS / 131072.f;
   ///
   /// 单位与 `WHEEL_RADIUS` `CHASSIS_RW` 的单位相同
-  fp32 destX = (dest[0] + dest[1] + dest[2] + dest[3]) * ADUP_PROP;
-  fp32 destY = (-dest[0] + dest[1] - dest[2] + dest[3]) * ADUP_PROP;
+  const fp32 destX = (dest[0] + dest[1] + dest[2] + dest[3]) * ADUPX_PROP;
+  const fp32 destY = (-dest[0] + dest[1] - dest[2] + dest[3]) * ADUPY_PROP;
 
   pid_update(&PID_MotX, (int)destX);
   pid_update(&PID_MotY, (int)destY);
 
-  fp32 SpeedX = PID_MotX.output, SpeedY = PID_MotY.output;
+  const fp32 SpeedX = PID_MotX.output, SpeedY = PID_MotY.output;
 
   /// 运动解算: dps -> rpm W: V(dps); T: 60s/min
   ///
@@ -130,8 +142,8 @@ void motor_event_callback(void) {
   /// 单位与 `WHEEL_RADIUS` `CHASSIS_RW` 的单位相同
   pid_update(&PID_MotA, angle);
 
-  fp32 vm = PID_MotA.output * CHASSIS_RW / (WHEEL_RADIUS * 6.f);
-  OutputA = -vm, OutputB = -vm, OutputC = vm, OutputD = vm;
+  const fp32 vm = PID_MotA.output * CHASSIS_RW / (WHEEL_RADIUS * 6.f);
+  Output[0] = -vm, Output[1] = -vm, Output[2] = vm, Output[3] = vm;
 
   /// 运动解算: mm/s -> rpm X: V(mm/s); Y: V(mm/s); T: 60s/min
   ///
@@ -142,14 +154,13 @@ void motor_event_callback(void) {
   ///   V = (X - Y) * 30.f / (WHEEL_RADIUS * __PI);
   ///
   /// 单位与 `WHEEL_RADIUS` `CHASSIS_RW` 的单位相同
-  OutputA += (SpeedX - SpeedY) * OPUT_PROP;
-  OutputB += (SpeedX + SpeedY) * OPUT_PROP;
-  OutputC += (SpeedX - SpeedY) * OPUT_PROP;
-  OutputD += (SpeedX + SpeedY) * OPUT_PROP;
+  Output[0] += (SpeedX - SpeedY) * OPUT_PROP;
+  Output[1] += (SpeedX + SpeedY) * OPUT_PROP;
+  Output[2] += (SpeedX - SpeedY) * OPUT_PROP;
+  Output[3] += (SpeedX + SpeedY) * OPUT_PROP;
 
   /// 并集 PID 输出
-  motor_speed_ctrl((int16_t)OutputA, (int16_t)OutputB, (int16_t)OutputC,
-                   (int16_t)OutputD);
+  motor_speed_ctrl(Output);
 
   /// 位置环稳定后解锁
   if (mutex_cnt < 3) {

@@ -13,8 +13,8 @@ set(CMAKE_PROJECT_VERSION           "0.07.23")
 set(CMAKE_PROJECT_URL               "api.salfa.cc")
 
 set(PRINTF_FLOAT_SUPPORT            OFF)    # BOOL Y/N ON/OFF
-set(CMAKE_BUILD_TYPE                Debug)  # Release or Debug
-# set(CMAKE_BUILD_TYPE                Release)  # Release or Debug
+# set(CMAKE_BUILD_TYPE                Debug)  # Release or Debug
+set(CMAKE_BUILD_TYPE                Release)  # Release or Debug
 
 set(CMAKE_C_STANDARD                11)     # Min: 11..
 set(CMAKE_CXX_STANDARD              11)     # Min: 11..
@@ -92,9 +92,9 @@ message("Float Printf Support: "    ${PRINTF_FLOAT_SUPPORT})
 set(CMAKE_C_FLAGS_DEBUG             "-O0 -g3")
 set(CMAKE_ASM_FLAGS_DEBUG           "-O0 -g3")
 set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g3")
-set(CMAKE_C_FLAGS_RELEASE           "-O2 -s")
-set(CMAKE_ASM_FLAGS_RELEASE         "-O2 -s")
-set(CMAKE_CXX_FLAGS_RELEASE         "-O2 -s")
+set(CMAKE_C_FLAGS_RELEASE           "-Os -s")
+set(CMAKE_ASM_FLAGS_RELEASE         "-Os -s")
+set(CMAKE_CXX_FLAGS_RELEASE         "-Os -s")
 
 # Set the project information
 unset(CMAKE_EXECUTABLE_SUFFIX)

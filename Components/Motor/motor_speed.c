@@ -16,7 +16,10 @@ static uint8_t MotSpeed[4][8] = {
 };
 
 /// 电机速度控制, 单位 rpm, 0 ~ ±5000
-void motor_speed_ctrl(int16_t a, int16_t b, int16_t c, int16_t d) {
+void motor_speed_ctrl(fp32 *oput) {
+  int16_t a = (int16_t)*oput, b = (int16_t)*oput;
+  int16_t c = (int16_t)*oput, d = (int16_t)*oput;
+
   // 电机正反设置
   MotSpeed[0][2] = CW, MotSpeed[2][2] = CCW;
   MotSpeed[1][2] = CW, MotSpeed[3][2] = CCW;

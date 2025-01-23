@@ -2,19 +2,30 @@
 
 /// PID 初始化
 /// pid: PID 结构体指针
-/// p: 比例系数, i: 积分系数, d: 微分系数, s: 步进系数
-/// mI: 最大积分, mO: 最大输出
 ///
-/// s 为 0 时, 不使用步进模式; s 不为 0 时, 使用步进模式
+/// pids[4]: PID 参数数组
+/// [0] p: 比例系数,
+/// [1] i: 积分系数,
+/// [2] d: 微分系数,
+/// [3] s: 步进系数;
+///
+/// max[2]: PID 输出限幅数组
+/// [0] mI: 最大积分,
+/// [1] mO: 最大输出;
+///
+/// s 为 0 时, 不使用步进模式,
+/// s 不为 0 时, 使用步进模式;
 ///
 /// 步进模式下, 用户设置 pid->target,
 /// 内部会逐步逼近 target, 逼近速度为 ks
 ///
-void pid_init(pid_t *pid, fp32 p, fp32 i, fp32 d, fp32 s, fp32 mI, fp32 mO) {
-  pid->kp = p, pid->ki = i, pid->kd = d, pid->ks = s;
-  pid->maxIntegral = mI, pid->maxOutput = mO;
+void pid_init(pid_t *pid, const fp32 *pids, const fp32 *max) {
+  pid->kp = pids[0], pid->ki = pids[1], pid->kd = pids[2], pid->ks = pids[3];
+  pid->maxIntegral = max[0], pid->maxOutput = max[1];
   pid->step_target = pid->target = 0;
 }
+
+void pid_set(pid_t *pid, fp32 target) { pid->target = target; }
 
 void pid_update(pid_t *pid, fp32 feedback) {
   // update step target

@@ -1,5 +1,7 @@
 #include "mutual.h"
 
+static int16_t mutual_data[3] = {0};
+
 /* 通讯交互协议:
 
 ! 接收数据格式: 0x07 0x23 0xXX 0xXX 0xXX 0xXX 0xXX 0xC8
@@ -33,25 +35,25 @@
 //!   0]    角度和模式位    len1
 //!   1]    X 位           len1
 //!   2]    Y 位           len1
-int16_t* mutual_handle(uint8_t* data) {
-  static int16_t mutual_data[3] = {0};
 
+const int16_t* getp_mutual(void) {
   mutual_data[0] = mutual_data[1] = mutual_data[2] = 0;
 
-  if (data[0] != 0x07 || data[1] != 0x23 || data[7] != 0xC8)
-  /// 判断帧头帧尾
-  {
-    return mutual_data;
-  }
-
-  if (data[2] & 0x80) {  // 相对模式
-    mutual_data[0] = 0x10;
-  } else {  // 坐标模式
-    mutual_data[0] = data[2];
-  }
-
-  mutual_data[1] = (int16_t)(((int16_t)data[3] << 8) | data[4]);
-  mutual_data[2] = (int16_t)(((int16_t)data[5] << 8) | data[6]);
-
   return mutual_data;
+}
+
+void mutual_handle(uint8_t* data) {
+  /// 判断帧头帧尾
+  if (data[0] != 0x07 || data[1] != 0x23 || data[7] != 0xC8) {
+    ///* 丢弃数据
+  } else {
+    if (data[2] & 0x80) {        // 相对模式
+      mutual_data[0] = 0x80;     //
+    } else {                     // 坐标模式
+      mutual_data[0] = data[2];  //
+    }
+
+    mutual_data[1] = (int16_t)(((int16_t)data[3] << 8) | data[4]);
+    mutual_data[2] = (int16_t)(((int16_t)data[5] << 8) | data[6]);
+  }
 }

@@ -20,7 +20,10 @@ static const uint8_t MotCnt[4][3] = {
 };
 
 /// 电机脉冲数获取, 一圈 65536 cnt
-void motor_addup_get(fp32 *destX) {  // destX len 4
+///
+///! 注意, 电机最大值溢出之后底盘可能会疯跑乱跑
+///! 注意, 当底盘行为异常的时候请检查电机线路是否正常
+void motor_addup_get(fp32 *dest) {  // destX len 4
   fp32 AdupA = 0.f, AdupB = 0.f, AdupC = 0.f, AdupD = 0.f;
 
   motor_data_read(MotCnt[0], MotCnt[1], MotCnt[2], MotCnt[3], sizeof(MotCnt[0]),
@@ -36,5 +39,5 @@ void motor_addup_get(fp32 *destX) {  // destX len 4
   if (!MotAupC[2]) AdupC = -AdupC;
   if (!MotAupD[2]) AdupD = -AdupD;
 
-  destX[0] = AdupA, destX[1] = AdupB, destX[2] = AdupC, destX[3] = AdupD;
+  dest[0] = AdupA, dest[1] = AdupB, dest[2] = AdupC, dest[3] = AdupD;
 }

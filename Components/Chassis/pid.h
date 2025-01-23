@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 void pid_update(pid_t *pid, fp32 feedback);
-void pid_init(pid_t *pid, fp32 p, fp32 i, fp32 d, fp32 s, fp32 mI, fp32 mO);
+void pid_init(pid_t *pid, const fp32 *pids, const fp32 *max);
 void pid_clear(pid_t *pid);
 
 #ifdef __cplusplus

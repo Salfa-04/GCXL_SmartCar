@@ -5,6 +5,16 @@ from find_material import Find_material
 import serial
 import cv2 as cv
 
+### 调参时尽量使用HDMI在原机上调试
+### 否则色差可能会导致检测失败
+###
+### 简单说一下 CarVision 和 CarVisionEdge 的区别:
+### CarVision 是在桌面上运行的, 可以通过显示屏显示检测结果
+### 方便调试参数, 但是如果要打开自启动需要插入诱骗器
+### CarVisionEdge 是直接在开发板上运行的， 输入配置文件之后
+### 会直接运行检测程序, 不需要显示屏, 不需要诱骗器
+### 两者的检测算法是一样的, 只是输入输出方式不同
+
 '''
     -------  串口通讯的规则为  -------
     波特率: 115200 8N1 0.1s超时
@@ -64,7 +74,7 @@ def main() -> None:
 
     address = "udp://localhost:8888"
     # address = "/home/salfa/CarVision/123/WeChat_20241101235359.mp4"
-    # address = "8"
+    # address = 8
 
     camera = cv.VideoCapture(address)
     camera.set(cv.CAP_PROP_FRAME_WIDTH, 640)
@@ -101,7 +111,7 @@ def main() -> None:
         # data = ser.read(4)
         # data = b"\x07\x23\x01\xC8"
         # data = b"\x07\x23\x02\xC8"
-        data = b"\x07\x23\x02\xC8"
+        data = b"\x07\x23\x01\xC8"
         if len(data) != 4 or data[0:2] != b"\x07\x23" or data[3] != 0xC8:
             continue
         receive = data[2]
